@@ -1,17 +1,14 @@
-package com.projectapp.firebasechat
+package com.projectapp.firebasechat.ui
 
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.contract.ActivityResultContracts
-import com.google.android.gms.auth.api.identity.BeginSignInRequest
+import androidx.fragment.app.Fragment
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -20,9 +17,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import com.projectapp.firebasechat.R
 import com.projectapp.firebasechat.databinding.FragmentSignInBinding
 
 class SignInFragment : Fragment() {
+
 
     private var _binding: FragmentSignInBinding? = null
     private val binding get() = requireNotNull(_binding)
@@ -56,6 +55,14 @@ class SignInFragment : Fragment() {
             signInWithGoogle()
         }
         auth.signOut()
+
+
+    }
+
+    private fun signInWithGoogle() {
+        val signInClient = getClient()
+        launcher.launch(signInClient.signInIntent)
+        openChatFragment()
     }
 
     private fun getClient(): GoogleSignInClient {
@@ -67,11 +74,6 @@ class SignInFragment : Fragment() {
         return GoogleSignIn.getClient(requireContext(), gso)
     }
 
-    private fun signInWithGoogle() {
-        val signInClient = getClient()
-        launcher.launch(signInClient.signInIntent)
-    }
-
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential).addOnCompleteListener { authResult ->
@@ -81,6 +83,12 @@ class SignInFragment : Fragment() {
                 Log.d("Mytag", "Google sign in is ERROR")
             }
         }
+    }
+
+    private fun openChatFragment() {
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, ChatFragment.newInstance())
+            .commit()
     }
 
     companion object {

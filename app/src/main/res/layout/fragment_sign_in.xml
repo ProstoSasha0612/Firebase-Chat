@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".SignInFragment">
+    tools:context=".ui.SignInFragment">
 
     <Space
         android:layout_width="match_parent"
@@ -17,13 +17,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="64dp"
-        android:text="Sign in with Google" />
-
-<!--    <TextView-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:text="@string/hello_blank_fragment"-->
-<!--        android:layout_weight="0"/>-->
-
+        android:text="@string/sign_in_with_google" />
 
 </LinearLayout>

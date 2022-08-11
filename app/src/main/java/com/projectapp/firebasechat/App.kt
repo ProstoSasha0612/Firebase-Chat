@@ -2,6 +2,8 @@ package com.projectapp.firebasechat
 
 import android.app.Application
 import android.content.Context
+import com.projectapp.firebasechat.di.AppComponent
+import com.projectapp.firebasechat.di.DaggerAppComponent
 
 class App : Application() {
 
