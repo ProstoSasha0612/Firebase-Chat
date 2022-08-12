@@ -1,18 +1,10 @@
 package com.projectapp.firebasechat.di
 
-import android.app.Activity
-import android.content.Context
-import android.content.Intent
-import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
@@ -21,6 +13,7 @@ import com.projectapp.firebasechat.R
 import com.projectapp.firebasechat.ui.ChatFragment
 import com.projectapp.firebasechat.ui.MainActivity
 import com.projectapp.firebasechat.ui.SignInFragment
+import com.projectapp.firebasechat.viewmodel.SignInViewModel
 import dagger.*
 import javax.inject.Scope
 
@@ -55,6 +48,8 @@ interface SignInFragmentComponent {
         fun create(@BindsInstance activity: AppCompatActivity): SignInFragmentComponent
     }
 
+    fun signInViewModel(): SignInViewModel
+
     fun inject(fragment: SignInFragment)
 
 }
@@ -82,9 +77,7 @@ interface AppModule {
         fun provideFireDataBase(): FirebaseDatabase {
             return Firebase.database
         }
-
     }
-
 }
 
 @Module

@@ -2,12 +2,15 @@ package com.projectapp.firebasechat.ui
 
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.ktx.auth
@@ -23,13 +26,16 @@ import com.projectapp.firebasechat.recyclerview.ItemDecoration
 import com.projectapp.firebasechat.recyclerview.UserMessageAdapter
 import com.projectapp.firebasechat.viewmodel.ChatViewModel
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ChatFragment : Fragment() {
 
     private var _binding: FragmentChatBinding? = null
     private val binding get() = requireNotNull(_binding)
     private val viewModel: ChatViewModel by lazy { ViewModelProvider(this)[ChatViewModel::class.java] }
-    private lateinit var adapter: UserMessageAdapter
+    private var adapter: UserMessageAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,72 +48,53 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initRecyclerView()
-        initReceiveMessageListener()
         setUpOnClickListeners()
-        setUpActionBarIcon()
+        if(savedInstanceState == null){
+            setUpActionBarIcon()
+        }
     }
 
     private fun initRecyclerView() {
         binding.rvChat.layoutManager = LinearLayoutManager(this.context)
         adapter = UserMessageAdapter()
+        binding.rvChat.adapter = adapter
         binding.rvChat.addItemDecoration(ItemDecoration())
 
+        viewModel.setUpMessageAddingListener(adapter)
 
-        binding.rvChat.adapter = adapter
-    }
-
-    private fun initReceiveMessageListener() {
-        val ref = Firebase.database.getReference("messages")
-        ref.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val list = mutableListOf<UserMessage?>()
-                for (s in snapshot.children) {
-                    list.add(s.getValue<UserMessage>())
-                }
-                adapter.submitList(list)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                Log.d("Mytag", error.message)
-            }
-        })
-    }
-
-    private fun sendMessage(userMessage: UserMessage) {
-        val ref = Firebase.database.getReference("messages")
-        ref.child(ref.push().key ?: "null key").setValue(userMessage)
     }
 
     private fun setUpActionBarIcon() {
         val activity = (activity as MainActivity)
         activity.supportActionBar?.setDisplayHomeAsUpEnabled(true)
         val currentUser = Firebase.auth.currentUser
-        Thread {
-            val bitmap = Picasso.get().load(currentUser?.photoUrl).get()
-            Log.d("Mytag", "Photo urls is ${currentUser?.photoUrl}")
-            val photo = BitmapDrawable(resources, bitmap)
 
-            requireActivity().runOnUiThread {
-                activity.supportActionBar?.setHomeAsUpIndicator(photo)
+        lifecycleScope.launch {
+            val photoDrawable = withContext(Dispatchers.IO) {
+                val bitmap = Picasso.get().load(currentUser?.photoUrl).get()
+                Log.d("Mytag", "Photo urls is ${currentUser?.photoUrl}")
+                val photo = BitmapDrawable(activity.resources, bitmap)
+                photo
             }
-        }.start()
-
-    }
-
-    private fun setUpOnClickListeners() {
-        binding.btnSend.setOnClickListener {
-            sendMessage(
-                UserMessage(
-                    Firebase.auth.currentUser?.displayName ?: "Standard Name",
-                    binding.editTextSendMessage.text.toString()
-                )
-            )
+            activity.supportActionBar?.setHomeAsUpIndicator(photoDrawable)
         }
+
     }
 
+        private fun setUpOnClickListeners() {
+            binding.btnSend.setOnClickListener {
+                viewModel.sendMessage(
+                    UserMessage(
+                        Firebase.auth.currentUser?.displayName ?: "Standard Name",
+                        binding.editTextSendMessage.text.toString()
+                    )
+                )
+            }
+        }
 
-    companion object {
-        fun newInstance() = ChatFragment()
+
+        companion object {
+            fun newInstance() = ChatFragment()
+        }
+
     }
-
-}

@@ -7,8 +7,9 @@ import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
 
-class SignInViewModel : ViewModel() {
+class SignInViewModel @Inject constructor() : ViewModel() {
 
     private var _mutableAuthStateFlow = MutableStateFlow<AuthState>(AuthState.AuthNone)
     val authStateFlow: StateFlow<AuthState>
