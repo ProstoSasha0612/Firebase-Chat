@@ -4,32 +4,33 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.ktx.Firebase
 import com.projectapp.firebasechat.R
+import com.projectapp.firebasechat.appComponent
 import com.projectapp.firebasechat.databinding.ActivityMainBinding
 import javax.inject.Inject
 
 class MainActivity : AppCompatActivity() {
 
     private var _binding: ActivityMainBinding? = null
-    val binding get() = requireNotNull(_binding)
+    private val binding get() = requireNotNull(_binding)
 
     @Inject
-    lateinit var testStr: String
-
-    @Inject
-    lateinit var database: FirebaseDatabase
+    lateinit var auth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         _binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-//        setUpActionBarIcon()
-        openSignInFragment()
+        appComponent.injectActivity(this)
+        openFirstScreen()
 
     }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
@@ -38,16 +39,22 @@ class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.sign_out) {
-            Firebase.auth.signOut()
-            openSignInFragment()
+            auth.signOut()
+            openFragment(SignInFragment.newInstance())
         }
         return super.onOptionsItemSelected(item)
     }
 
+    private fun openFirstScreen(){
+        when(auth.currentUser){
+            null -> openFragment(SignInFragment.newInstance())
+            else -> openFragment(ChatFragment.newInstance())
+        }
+    }
 
-    private fun openSignInFragment() {
+    private fun openFragment(fragment: Fragment){
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, SignInFragment.newInstance())
+            .replace(R.id.fragment_container,fragment)
             .commit()
     }
 }

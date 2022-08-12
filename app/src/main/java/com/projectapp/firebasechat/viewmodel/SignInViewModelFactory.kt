@@ -9,7 +9,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 class SignInViewModelFactory(private val resources: Resources) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return SignInViewModel(resources = resources) as T
+        return SignInViewModel() as T
 
     }
 }

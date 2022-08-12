@@ -43,16 +43,8 @@ class ChatFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         initRecyclerView()
         initReceiveMessageListener()
-
+        setUpOnClickListeners()
         setUpActionBarIcon()
-        binding.btnSend.setOnClickListener {
-            sendMessage(
-                UserMessage(
-                    Firebase.auth.currentUser?.displayName ?: "Standard Name",
-                    binding.editTextSendMessage.text.toString()
-                )
-            )
-        }
     }
 
     private fun initRecyclerView() {
@@ -92,7 +84,7 @@ class ChatFragment : Fragment() {
         val currentUser = Firebase.auth.currentUser
         Thread {
             val bitmap = Picasso.get().load(currentUser?.photoUrl).get()
-            Log.d("Mytag","Photo urls is ${currentUser?.photoUrl}")
+            Log.d("Mytag", "Photo urls is ${currentUser?.photoUrl}")
             val photo = BitmapDrawable(resources, bitmap)
 
             requireActivity().runOnUiThread {
@@ -100,6 +92,17 @@ class ChatFragment : Fragment() {
             }
         }.start()
 
+    }
+
+    private fun setUpOnClickListeners() {
+        binding.btnSend.setOnClickListener {
+            sendMessage(
+                UserMessage(
+                    Firebase.auth.currentUser?.displayName ?: "Standard Name",
+                    binding.editTextSendMessage.text.toString()
+                )
+            )
+        }
     }
 
 

@@ -11,20 +11,32 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.database.FirebaseDatabase
+import com.projectapp.firebasechat.App
 import com.projectapp.firebasechat.R
+import com.projectapp.firebasechat.appComponent
 import com.projectapp.firebasechat.databinding.FragmentSignInBinding
+import com.projectapp.firebasechat.di.SignInFragmentComponent
+import javax.inject.Inject
 
 class SignInFragment : Fragment() {
 
-
     private var _binding: FragmentSignInBinding? = null
     private val binding get() = requireNotNull(_binding)
+    lateinit var signInFragmentComponent: SignInFragmentComponent
+        private set
+
+    @Inject
+    lateinit var signInClient: GoogleSignInClient
+
+    @Inject
+    lateinit var auth: FirebaseAuth
+
+
+
     private val launcher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(it.data)
@@ -32,12 +44,13 @@ class SignInFragment : Fragment() {
                 val account = task.getResult(ApiException::class.java)
                 if (account != null) {
                     firebaseAuthWithGoogle(account.idToken.toString())
+                    openChatFragment()
                 }
             } catch (e: ApiException) {
                 Log.d("Mytag", e.message.toString())
             }
         }
-    lateinit var auth: FirebaseAuth
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,30 +62,35 @@ class SignInFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        auth = Firebase.auth
+        signInFragmentComponent =
+            requireContext().appComponent.signInFragmentComponentFactory()
+                .create(requireActivity() as MainActivity)
+        signInFragmentComponent.inject(this)
 
         binding.btnSignIn.setOnClickListener {
-            signInWithGoogle()
+            signInWithGoogle(signInClient)
         }
-        auth.signOut()
-
 
     }
 
-    private fun signInWithGoogle() {
-        val signInClient = getClient()
+    private fun signInWithGoogle(signInClient: GoogleSignInClient) {
         launcher.launch(signInClient.signInIntent)
-        openChatFragment()
+//        openChatFragment()
     }
 
-    private fun getClient(): GoogleSignInClient {
-        val gso = GoogleSignInOptions
-            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-        return GoogleSignIn.getClient(requireContext(), gso)
-    }
+    //    private val launcher: ActivityResultLauncher<Intent> =
+//        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+//            val task = GoogleSignIn.getSignedInAccountFromIntent(it.data)
+//            try {
+//                val account = task.getResult(ApiException::class.java)
+//                if (account != null) {
+//                    firebaseAuthWithGoogle(account.idToken.toString())
+//                    openChatFragment()
+//                }
+//            } catch (e: ApiException) {
+//                Log.d("Mytag", e.message.toString())
+//            }
+//        }
 
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
