@@ -69,4 +69,6 @@ dependencies {
     /*Picasso*/
     implementation 'com.squareup.picasso:picasso:2.8'
 
+    /*Coroutines and Flow*/
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1"
 }

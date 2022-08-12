@@ -10,24 +10,26 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.database.FirebaseDatabase
-import com.projectapp.firebasechat.App
 import com.projectapp.firebasechat.R
 import com.projectapp.firebasechat.appComponent
 import com.projectapp.firebasechat.databinding.FragmentSignInBinding
 import com.projectapp.firebasechat.di.SignInFragmentComponent
+import com.projectapp.firebasechat.viewmodel.AuthState
+import com.projectapp.firebasechat.viewmodel.SignInViewModel
 import javax.inject.Inject
 
 class SignInFragment : Fragment() {
 
     private var _binding: FragmentSignInBinding? = null
     private val binding get() = requireNotNull(_binding)
+    private val viewModel: SignInViewModel by lazy { ViewModelProvider(this)[SignInViewModel::class.java] }
     lateinit var signInFragmentComponent: SignInFragmentComponent
         private set
 
@@ -38,17 +40,16 @@ class SignInFragment : Fragment() {
     lateinit var auth: FirebaseAuth
 
 
-
     private val launcher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(it.data)
             try {
                 val account = task.getResult(ApiException::class.java)
                 if (account != null) {
-                    firebaseAuthWithGoogle(account.idToken.toString())
+                    viewModel.firebaseAuthWithGoogle(account.idToken.toString())
                 }
             } catch (e: ApiException) {
-                Log.d("Mytag", e.message.toString())
+                Log.d("Mytag EXCEPTION", e.message.toString())
             }
         }
 
@@ -72,27 +73,40 @@ class SignInFragment : Fragment() {
             signInWithGoogle(signInClient)
         }
 
+        initFlowListeners()
+
     }
 
     private fun signInWithGoogle(signInClient: GoogleSignInClient) {
         launcher.launch(signInClient.signInIntent)
     }
 
-
-    private fun firebaseAuthWithGoogle(idToken: String) {
-        binding.btnSignIn.isEnabled = false
-        binding.progressBar.isVisible = true
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credential).addOnCompleteListener { authResult ->
-            if (authResult.isSuccessful) {
-                Log.d("Mytag", "Google sign in is successful")
-                openChatFragment()
-            } else {
-                Snackbar.make(binding.root,"Sign in error",Snackbar.LENGTH_SHORT).show()
-                Log.d("Mytag", "Google sign in is ERROR")
+    private fun initFlowListeners() {
+        lifecycleScope.launchWhenStarted {
+            viewModel.authStateFlow.collect { authState ->
+                when (authState) {
+                    is AuthState.AuthInProgress -> {
+                        binding.btnSignIn.isEnabled = false
+                        binding.progressBar.isVisible = true
+                    }
+                    is AuthState.AuthSuccess -> {
+                        binding.btnSignIn.isEnabled = true
+                        binding.progressBar.isVisible = false
+                        Log.d("Mytag", "Google sign in is successful")
+                        openChatFragment()
+                    }
+                    is AuthState.AuthError -> {
+                        binding.btnSignIn.isEnabled = true
+                        binding.progressBar.isVisible = false
+                        Snackbar.make(binding.root, "Sign in error", Snackbar.LENGTH_SHORT).show()
+                        Log.d("Mytag", "Google sign in is ERROR")
+                    }
+                    is AuthState.AuthNone -> {
+                        binding.btnSignIn.isEnabled = true
+                        binding.progressBar.isVisible = false
+                    }
+                }
             }
-            binding.progressBar.isVisible = false
-            binding.btnSignIn.isEnabled = true
         }
     }
 
