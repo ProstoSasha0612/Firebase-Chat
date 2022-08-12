@@ -8,10 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.FirebaseDatabase
@@ -44,7 +46,6 @@ class SignInFragment : Fragment() {
                 val account = task.getResult(ApiException::class.java)
                 if (account != null) {
                     firebaseAuthWithGoogle(account.idToken.toString())
-                    openChatFragment()
                 }
             } catch (e: ApiException) {
                 Log.d("Mytag", e.message.toString())
@@ -75,31 +76,23 @@ class SignInFragment : Fragment() {
 
     private fun signInWithGoogle(signInClient: GoogleSignInClient) {
         launcher.launch(signInClient.signInIntent)
-//        openChatFragment()
     }
 
-    //    private val launcher: ActivityResultLauncher<Intent> =
-//        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-//            val task = GoogleSignIn.getSignedInAccountFromIntent(it.data)
-//            try {
-//                val account = task.getResult(ApiException::class.java)
-//                if (account != null) {
-//                    firebaseAuthWithGoogle(account.idToken.toString())
-//                    openChatFragment()
-//                }
-//            } catch (e: ApiException) {
-//                Log.d("Mytag", e.message.toString())
-//            }
-//        }
 
     private fun firebaseAuthWithGoogle(idToken: String) {
+        binding.btnSignIn.isEnabled = false
+        binding.progressBar.isVisible = true
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential).addOnCompleteListener { authResult ->
             if (authResult.isSuccessful) {
                 Log.d("Mytag", "Google sign in is successful")
+                openChatFragment()
             } else {
+                Snackbar.make(binding.root,"Sign in error",Snackbar.LENGTH_SHORT).show()
                 Log.d("Mytag", "Google sign in is ERROR")
             }
+            binding.progressBar.isVisible = false
+            binding.btnSignIn.isEnabled = true
         }
     }
 
