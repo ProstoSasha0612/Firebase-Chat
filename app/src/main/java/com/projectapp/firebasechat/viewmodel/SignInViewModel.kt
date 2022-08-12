@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
-class SignInViewModel @Inject constructor() : ViewModel() {
+class SignInViewModel: ViewModel() {
 
     private var _mutableAuthStateFlow = MutableStateFlow<AuthState>(AuthState.AuthNone)
     val authStateFlow: StateFlow<AuthState>

@@ -48,8 +48,6 @@ interface SignInFragmentComponent {
         fun create(@BindsInstance activity: AppCompatActivity): SignInFragmentComponent
     }
 
-    fun signInViewModel(): SignInViewModel
-
     fun inject(fragment: SignInFragment)
 
 }
