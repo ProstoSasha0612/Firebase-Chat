@@ -1,0 +1,11 @@
+1)getClient -> получаем гугловский клиент, из которого достаем интент (в котором пользователь
+входит в свой гугл аккаунт)
+
+2)Ч/з ActivityResultLauncher -> запускам этот интент и получаем из него результат - task (из которог
+берем signed In account)
+
+3) Получаем idToken из аккаунта
+
+4) Получаем credential используя GoogleAuthProvider.getCredential(idToken)
+
+5) Аутентифицируемся с нашими credentials
